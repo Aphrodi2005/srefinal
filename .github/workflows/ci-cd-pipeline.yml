@@ -52,12 +52,12 @@ jobs:
       uses: docker/setup-buildx-action@v1
 
     - name: Login to DockerHub
-      run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+      run: echo "aidos2005" | docker login -u "aphrodi" --password-stdin
 
     - name: Push Docker image
       run: |
-        docker tag my-sample-app:${{ github.sha }} my-dockerhub-user/my-sample-app:${{ github.sha }}
-        docker push my-dockerhub-user/my-sample-app:${{ github.sha }}
+        docker tag my-sample-app:${{ github.sha }} your-docker-hub-username/my-sample-app:${{ github.sha }}
+        docker push your-docker-hub-username/my-sample-app:${{ github.sha }}
 
     - name: Deploy to Staging
       run: |
