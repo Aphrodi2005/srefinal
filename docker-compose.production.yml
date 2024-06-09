@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  web:
+    image: my-dockerhub-user/my-sample-app:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=example.com
