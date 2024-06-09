@@ -1,0 +1,70 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Lint code
+      run: |
+        pip install flake8
+        flake8 .
+
+    - name: Run tests
+      run: |
+        pip install pytest
+        pytest
+
+    - name: Build Docker image
+      run: |
+        docker build -t my-sample-app:${{ github.sha }} .
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to DockerHub
+      run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+    - name: Push Docker image
+      run: |
+        docker tag my-sample-app:${{ github.sha }} my-dockerhub-user/my-sample-app:${{ github.sha }}
+        docker push my-dockerhub-user/my-sample-app:${{ github.sha }}
+
+    - name: Deploy to Staging
+      run: |
+        docker-compose -f docker-compose.staging.yml up -d
+
+    - name: Deploy to Production
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      needs: deploy
+      run: |
+        docker-compose -f docker-compose.production.yml up -d
